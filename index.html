@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Local Event Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Filters and Search */
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filters select, .filters input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .filters button {
+            padding: 10px 20px;
+            background: #2575fc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .filters button:hover {
+            background: #1a5bbf;
+        }
+
+        /* Event List */
+        .event-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .event-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .event-card h3 {
+            color: #2575fc;
+            margin-bottom: 10px;
+        }
+
+        .event-card p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .event-card button {
+            background: #2575fc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .event-card button:hover {
+            background: #1a5bbf;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .modal-content h2 {
+            color: #2575fc;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .modal-content button {
+            background: #2575fc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal-content button:hover {
+            background: #1a5bbf;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>Interactive Local Event Finder</h1>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Filters and Search -->
+        <div class="filters">
+            <select id="category-filter">
+                <option value="all">All Categories</option>
+                <option value="music">Music</option>
+                <option value="arts">Arts</option>
+                <option value="food">Food</option>
+                <option value="technology">Technology</option>
+                <option value="sports">Sports</option>
+                <option value="community">Community</option>
+            </select>
+            <input type="text" id="search-box" placeholder="Search events...">
+            <button id="search-button">Search</button>
+        </div>
+
+        <!-- Event List -->
+        <div class="event-list" id="event-list">
+            <!-- Event cards will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal" id="event-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Event Title</h2>
+            <p id="modal-description">Event description goes here.</p>
+            <button id="close-modal">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Mock Data
+        const events = [
+            {
+                title: "Jazz Night",
+                category: "music",
+                description: "Enjoy an evening of smooth jazz with live performances.",
+                date: "2025-03-15",
+                time: "7:00 PM",
+                location: "Downtown Jazz Club"
+            },
+            {
+                title: "Art Exhibition",
+                category: "arts",
+                description: "Explore contemporary art from local artists.",
+                date: "2025-03-20",
+                time: "10:00 AM",
+                location: "City Art Gallery"
+            },
+            {
+                title: "Food Festival",
+                category: "food",
+                description: "Taste delicious dishes from around the world.",
+                date: "2025-03-25",
+                time: "12:00 PM",
+                location: "Central Park"
+            }
+        ];
+
+        // Display Events
+        const eventList = document.getElementById("event-list");
+        const categoryFilter = document.getElementById("category-filter");
+        const searchBox = document.getElementById("search-box");
+        const searchButton = document.getElementById("search-button");
+
+        function displayEvents(filteredEvents) {
+            eventList.innerHTML = "";
+            filteredEvents.forEach(event => {
+                const eventCard = document.createElement("div");
+                eventCard.className = "event-card";
+                eventCard.innerHTML = `
+                    <h3>${event.title}</h3>
+                    <p><strong>Date:</strong> ${event.date}</p>
+                    <p><strong>Time:</strong> ${event.time}</p>
+                    <p><strong>Location:</strong> ${event.location}</p>
+                    <button onclick="openModal('${event.title}', '${event.description}')">View Details</button>
+                `;
+                eventList.appendChild(eventCard);
+            });
+        }
+
+        // Filter and Search Events
+        function filterEvents() {
+            const category = categoryFilter.value;
+            const searchTerm = searchBox.value.toLowerCase();
+            const filteredEvents = events.filter(event => {
+                const matchesCategory = category === "all" || event.category === category;
+                const matchesSearch = event.title.toLowerCase().includes(searchTerm) || 
+                                     event.description.toLowerCase().includes(searchTerm);
+                return matchesCategory && matchesSearch;
+            });
+            displayEvents(filteredEvents);
+        }
+
+        categoryFilter.addEventListener("change", filterEvents);
+        searchBox.addEventListener("input", filterEvents);
+        searchButton.addEventListener("click", filterEvents);
+
+        // Modal Functions
+        const modal = document.getElementById("event-modal");
+        const modalTitle = document.getElementById("modal-title");
+        const modalDescription = document.getElementById("modal-description");
+        const closeModalButton = document.getElementById("close-modal");
+
+        function openModal(title, description) {
+            modalTitle.textContent = title;
+            modalDescription.textContent = description;
+            modal.style.display = "flex";
+        }
+
+        closeModalButton.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
+
+        // Initial Display
+        displayEvents(events);
+    </script>
+</body>
+</html>
